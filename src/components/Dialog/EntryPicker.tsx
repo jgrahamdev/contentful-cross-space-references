@@ -8,7 +8,7 @@ import { createClient, ContentfulClientApi, ContentType, Entry } from 'contentfu
 import tokens from '@contentful/forma-36-tokens'
 import { css } from 'emotion'
 
-import { SpaceConfigItem } from '../ConfigScreen'
+import { spaceConfiguration } from '../ConfigScreen'
 import { DialogProps, DialogParameters } from './index'
 
 interface EntryListItemProps {
@@ -111,7 +111,7 @@ const styles = {
 }
 
 const EntryPicker = (props:DialogProps) => {
-  const [spaceConfig, setSpaceConfig] = useState<SpaceConfigItem>({id: '', name: '', token: ''})
+  const [spaceConfig, setSpaceConfig] = useState<spaceConfiguration>({id: '', name: '', token: ''})
   const [client, setClient] = useState<ContentfulClientApi>()
   const [contentTypes, setContentTypes] = useState<Array<ContentType>>([])
   const [selectedContentType, setSelectedContentType] = useState<string>('any')

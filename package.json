@@ -4,9 +4,7 @@
   "private": true,
   "dependencies": {
     "@contentful/app-sdk": "^3.32.1",
-    "@contentful/field-editor-date": "^0.7.1",
     "@contentful/field-editor-reference": "^2.2.1",
-    "@contentful/field-editor-single-line": "^0.10.1",
     "@contentful/field-editor-test-utils": "^0.8.1",
     "@contentful/forma-36-fcss": "^0.2.7",
     "@contentful/forma-36-react-components": "^3.72.7",

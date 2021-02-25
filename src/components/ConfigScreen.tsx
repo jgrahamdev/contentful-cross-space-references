@@ -1,22 +1,20 @@
 import React, { Component } from 'react';
 
-import { AppExtensionSDK } from 'contentful-ui-extensions-sdk';
+import { AppExtensionSDK } from '@contentful/app-sdk';
 import {
   Heading, Form, Workbench, Paragraph, Note,
   Button, IconButton, Dropdown, DropdownList, DropdownListItem,
   Table, TableHead, TableCell, TableRow, TableBody
 } from '@contentful/forma-36-react-components';
 
-export interface SpaceConfigItem {
+export interface spaceConfiguration {
   name: string;
   id: string;
   token: string;
 }
 
-export interface SpaceConfigs extends Array<SpaceConfigItem>{}
-
 export interface AppInstallationParameters {
-  spaceConfigs: SpaceConfigs;
+  spaceConfigs: spaceConfiguration[];
 }
 
 interface StringArray {
@@ -123,9 +121,6 @@ export default class Config extends Component<ConfigProps, ConfigState> {
       parameters = {parameters: savedParams}
     }
 
-    console.log(await this.props.sdk.space.getEditorInterface('crossSpaceReference'))
-
-
     this.setState(parameters, () => {
       // Once preparation has finished, call `setReady` to hide
       // the loading screen and present the app to a user.
@@ -144,23 +139,12 @@ export default class Config extends Component<ConfigProps, ConfigState> {
     // related to this app installation
     const currentState:any = await this.props.sdk.app.getCurrentState();
 
-    console.log(currentState)
     return {
       // Parameters to be persisted as the app configuration.
       parameters: this.state.parameters,
       // In case you don't want to submit any update to app
       // locations, you can just pass the currentState as is
-      targetState: {
-        EditorInterface: {
-          ...currentState?.EditorInterface,
-
-          crossSpaceReference: {
-            editors: {
-              position: 0
-            }
-          },
-        }
-      }
+      targetState: currentState,
     };
   };
 

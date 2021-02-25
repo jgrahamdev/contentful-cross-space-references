@@ -3,7 +3,7 @@ import { TextField, Form, Modal, Button } from '@contentful/forma-36-react-compo
 
 import { createClient } from 'contentful'
 
-import { SpaceConfigItem } from '../ConfigScreen'
+import { spaceConfiguration } from '../ConfigScreen'
 import { DialogProps, DialogParameters } from './index'
 
 interface ValidInput {
@@ -31,7 +31,7 @@ const SpaceConfigField = (props: any) => {
 
 
 const SpaceConfiguration = (props: DialogProps) => {
-  const [spaceConfig, setSpaceConfig] = useState({name: '', id: '', token: ''} as SpaceConfigItem)
+  const [spaceConfig, setSpaceConfig] = useState<spaceConfiguration>({name: '', id: '', token: ''})
   const [validInput, setValidInput] = useState({id: true, token: true})
   const [validationMessages, setValidationMessages] = useState({id: '', token: ''})
 
@@ -56,8 +56,8 @@ const SpaceConfiguration = (props: DialogProps) => {
   }
 
   const onFieldChange = (e:React.ChangeEvent<HTMLInputElement>) => {
-    let id = e.currentTarget.id as keyof SpaceConfigItem
-    let updatedConfig:SpaceConfigItem = {...spaceConfig, ...{[id]: e.currentTarget.value}}
+    let id = e.currentTarget.id as keyof spaceConfiguration
+    let updatedConfig:spaceConfiguration = {...spaceConfig, ...{[id]: e.currentTarget.value}}
 
     setSpaceConfig(updatedConfig)
   }
@@ -98,7 +98,7 @@ const SpaceConfiguration = (props: DialogProps) => {
     const dialogParams = props.sdk.parameters.invocation as DialogParameters
 
     if (Object.keys(dialogParams.props).length) {
-      let propsSpaceConfig = dialogParams.props as SpaceConfigItem
+      let propsSpaceConfig = dialogParams.props as spaceConfiguration
       setSpaceConfig(propsSpaceConfig)
     }
 

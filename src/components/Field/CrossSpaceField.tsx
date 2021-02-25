@@ -1,20 +1,21 @@
-import React, { useState, useEffect } from 'react';
-
-import { Note } from '@contentful/forma-36-react-components';
-import tokens from '@contentful/forma-36-tokens';
-import { FieldExtensionSDK, SpaceAPI } from 'contentful-ui-extensions-sdk';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 
 import { createClient, ContentfulClientApi, Entry, ContentType } from 'contentful'
+import { FieldExtensionSDK, SpaceAPI } from '@contentful/app-sdk';
+import { Note } from '@contentful/forma-36-react-components';
+import tokens from '@contentful/forma-36-tokens';
 
 import { createFakeSpaceAPI } from '@contentful/field-editor-test-utils'
 import { SingleEntryReferenceEditor, CombinedLinkActions} from '@contentful/field-editor-reference'
 
-import { AppInstallationParameters, SpaceConfigs } from '../ConfigScreen'
+import { spaceConfiguration } from '../ConfigScreen'
 
 import { css } from 'emotion';
 
-interface FieldProps {
+interface CrossSpaceFieldProps {
   sdk: FieldExtensionSDK;
+  spaceConfigs: spaceConfiguration[];
+  value: any;
 }
 
 const styles = {
@@ -23,19 +24,32 @@ const styles = {
   })
 }
 
-const CrossSpaceField = (props: FieldProps) => {
+const CrossSpaceField = (props: CrossSpaceFieldProps) => {
   const [showNote, setShowNote] = useState<boolean>(true)
-  const [value, setValue] = useState<any>(props.sdk.field.getValue())
-  const [spaceConfigs, setSpaceConfigs] = useState<SpaceConfigs>([])
   const [contentTypes, setContentTypes] = useState<ContentType[]>([])
-  const [entry, setEntry] = useState<Entry<any>|undefined>()
+  const spaceConfigs = props.spaceConfigs
+
+  const getClient = () => {
+    if (props.value) {
+      let spaceConfig = props.spaceConfigs.find((space) => space.id === props.value.sys.space.sys.id)
+
+      if (spaceConfig) {
+        return createClient({
+          space: spaceConfig.id,
+          accessToken: spaceConfig.token
+        })
+      }
+    }
+
+    return null
+  }
 
   const onNoteClose = () => {
     setShowNote(false)
   }
 
   const onLinkEntry = async (spaceId: string | undefined, index?: number | undefined) => {
-    let spaceConfig = spaceConfigs.find((config) => config.id === spaceId)
+    let spaceConfig = props.spaceConfigs.find((config) => config.id === spaceId)
 
     if (spaceConfig) {
       props.sdk.dialogs.openCurrentApp({
@@ -66,18 +80,56 @@ const CrossSpaceField = (props: FieldProps) => {
   }
 
   const onCrossSpaceEntryEdit = () => {
-    props.sdk.dialogs.openAlert({
+    props.sdk.dialogs.openCurrentApp({
       title: 'Cross Space Reference',
-      message: "At this time, editing of Cross Space References can't be done via slide-in navigation. If you would like to edit this entry, please open the entry in it's respective space.",
-      confirmLabel: "Back to Editing"
+      shouldCloseOnOverlayClick: true,
+      shouldCloseOnEscapePress: true,
+      parameters: {
+        dialog: 'CrossSpaceEntry',
+        props: {
+          entry: props.value
+        }
+      }
     })
   }
 
-  const renderCard = (props:any, renderDefaultCard:any) => {
-    return renderDefaultCard({
-      ...props,
-      onEdit: onCrossSpaceEntryEdit
-    })
+  const customizeMock = (api: SpaceAPI): SpaceAPI => {
+    return {
+      ...api,
+      getCachedContentTypes: () => {
+        return contentTypes
+      },
+    }
+  }
+
+  const space = createFakeSpaceAPI(customizeMock as any)
+
+  let fakeSdk = {
+    ...props.sdk,
+    space: {
+      ...space,
+      getEntry: async (id: string) => {
+        let client = getClient()
+        if (client) {
+          let entry = await client.getEntry(id, {locale: '*'}) as Entry<any>
+          return {
+            ...entry,
+            sys: {
+              ...entry.sys,
+              version: 10,
+              publishedVersion: 10
+            },
+          }
+        }
+        return Promise.reject()
+      },
+      async getEntityScheduledActions() {
+        return [];
+      }
+    },
+    access: {
+      can: async () => true
+    },
   }
 
   // Start AutoResizer at initialization of component.
@@ -88,38 +140,15 @@ const CrossSpaceField = (props: FieldProps) => {
     }
   }, [props.sdk.window])
 
-  // Grab app parameters.
-  useEffect(() => {
-    let installParams = props.sdk.parameters.installation as AppInstallationParameters
-
-    setSpaceConfigs(installParams.spaceConfigs)
-  }, [props.sdk.parameters.installation])
-
-  // Update field value if needed.
-  useEffect(() => {
-    const detachValueChangeHandler = props.sdk.field.onValueChanged( async (value:any) => {
-      setValue(value)
-    })
-
-    return () => {
-      return detachValueChangeHandler()
-    }
-  }, [props.sdk.field])
-
   // Grab Content Type data from Cross Space if field value exists.
-  useEffect(() => {
-    if (value && spaceConfigs) {
-      let spaceConfig = spaceConfigs.find((space) => space.id === value.sys.space.sys.id)
+  useLayoutEffect(() => {
+    if (props.value && props.spaceConfigs.length) {
+      let spaceConfig = props.spaceConfigs.find((space) => space.id === props.value.sys.space.sys.id)
       if (spaceConfig) {
         let client = createClient({
           space: spaceConfig.id,
           accessToken: spaceConfig.token,
         }) as ContentfulClientApi
-
-        client.getEntry(value.sys.id)
-        .then(entry => {
-          setEntry(entry)
-        })
 
         client.getContentTypes()
         .then(contentTypes => {
@@ -129,69 +158,17 @@ const CrossSpaceField = (props: FieldProps) => {
         })
       }
     }
-  }, [value, spaceConfigs])
+  }, [props.value, props.spaceConfigs])
 
-  const createFakeSdk = (value:any, entry:Entry<any>|undefined, contentTypes:ContentType[]) => {
-
-    const getClient = () => {
-      let client
-      if (value) {
-        let installParams = props.sdk.parameters.installation as AppInstallationParameters
-
-        let spaceConfig = installParams.spaceConfigs.find((space) => space.id === value.sys.space.sys.id)
-        if (spaceConfig) {
-          client = createClient({
-            space: spaceConfig.id,
-            accessToken: spaceConfig.token,
-          }) as ContentfulClientApi
-        }
-      }
-
-      return client
-    }
-
-    const customizeMock = (space: SpaceAPI): SpaceAPI => {
-      return {
-        ...space,
-         getCachedContentTypes: () => {
-          return contentTypes
-         },
-      }
-    }
-
-    const space = createFakeSpaceAPI(customizeMock)
-    const sdk = {
-      field: props.sdk.field,
-      locales: props.sdk.locales,
-      space: {
-        ...space,
-        getEntry: async (id: string) => {
-          let client = getClient()
-          if (client) {
-            let entry = await client.getEntry(id) as any
-
-            // Add fake version info so card reflects that content is published.
-            return {...entry, sys: {...entry.sys, version: 10, publishedVersion: 10 }}
-          }
-
-          return Promise.reject()
-        },
-        async getEntityScheduledActions() {
-          return [];
-        }
-      },
-      dialogs: props.sdk.dialogs,
-      navigator: props.sdk.navigator,
-      access: {
-        can: async () => true,
-      },
-    }
-
-    return sdk
+  const renderCard = (props:any, linkActionsProps:any, renderDefaultCard:any) => {
+    return renderDefaultCard({
+      ...props,
+      onEdit: onCrossSpaceEntryEdit
+    })
   }
 
   const LinkActions = (props:any) => {
-    let fakeCts = spaceConfigs.map((config) => {
+    let fakeCts = spaceConfigs.map((config:any) => {
       return {
         description: '',
         name: config.name,
@@ -208,7 +185,6 @@ const CrossSpaceField = (props: FieldProps) => {
         onCreate={onLinkEntry}
         contentTypes={fakeCts}
         combinedActionsLabel="Add Content from another Space"
-        canCreateEntity={true}
       />
     )
 
@@ -226,19 +202,17 @@ const CrossSpaceField = (props: FieldProps) => {
           Search for and select entries from a space other than the one you are currently using. You may see entries in this list that you don't have access to manage within Contentful.
         </Note>
       }
-      {spaceConfigs.length > 0 &&
+      {fakeSdk &&
         <SingleEntryReferenceEditor
           viewType="link"
-          sdk={createFakeSdk(value, entry, contentTypes) as any}
+          sdk={fakeSdk as any}
           isInitiallyDisabled={false}
           hasCardEditActions={false}
           parameters={{instance: {
             showCreateEntityAction: true,
-            showLinkEntityAction: true
+            showLinkEntityAction: false
           }}}
-          renderCustomCard={(props, _, renderDefaultCard) => {
-            return renderCard(props, renderDefaultCard)
-          }}
+          renderCustomCard={renderCard}
           renderCustomActions={(props) => <LinkActions {...props} /> }
         />
       }

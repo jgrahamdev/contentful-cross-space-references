@@ -1,8 +1,9 @@
 import React from 'react'
-import { DialogExtensionSDK } from 'contentful-ui-extensions-sdk'
+import { DialogExtensionSDK } from '@contentful/app-sdk'
 
 import SpaceConfiguration from './SpaceConfiguration'
 import EntryPicker from './EntryPicker'
+import CrossSpaceEntry from './CrossSpaceEntry'
 
 export interface DialogProps {
   sdk: DialogExtensionSDK;
@@ -22,6 +23,10 @@ const Dialog = (props: DialogProps) => {
   else if (params.dialog === 'EntryPicker') {
     return <EntryPicker sdk={props.sdk} />
   }
+  else if (params.dialog === 'CrossSpaceEntry') {
+    return <CrossSpaceEntry sdk={props.sdk} />
+  }
+
   return null
 }
 
