@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { AppExtensionSDK } from '@contentful/app-sdk';
 import {
@@ -7,44 +7,91 @@ import {
   Table, TableHead, TableCell, TableRow, TableBody
 } from '@contentful/forma-36-react-components';
 
-export interface spaceConfiguration {
-  name: string;
-  id: string;
-  token: string;
-}
-
-export interface AppInstallationParameters {
-  spaceConfigs: spaceConfiguration[];
-}
-
-interface StringArray {
-  [index: number]: boolean;
-}
+import { SpaceConfiguration } from 'Types'
 
 interface ConfigProps {
   sdk: AppExtensionSDK;
 }
 
-interface ConfigState {
-  parameters: AppInstallationParameters;
-  dropdownState: StringArray;
+interface SpaceConfigRowProps {
+  spaceConfig:SpaceConfiguration;
+  onEdit: (id:string) => void;
+  onDelete: (id:string) => void
 }
 
-export default class Config extends Component<ConfigProps, ConfigState> {
-  constructor(props: ConfigProps) {
-    super(props);
-    this.state = {
-      parameters: {
-        spaceConfigs: [],
-      },
-      dropdownState: {},
-    };
+const ConfigScreen = (props: ConfigProps) => {
+  props.sdk.app.onConfigure(() => onConfigure());
 
-    props.sdk.app.onConfigure(() => this.onConfigure());
+  const [spaceConfigs, setSpaceConfigs] = useState<SpaceConfiguration[]>([])
+
+  const onConfigure = async() => {
+    // Check that we have valid installation parameters.
+    if (!spaceConfigs.length) {
+      props.sdk.notifier.error('You must add at least one Cross-Space configuration to install this application.')
+      return false;
+    }
+
+    // Get current the state of EditorInterface and other entities
+    // related to this app installation
+    const currentState:any = await props.sdk.app.getCurrentState();
+
+    return {
+      // Parameters to be persisted as the app configuration.
+      parameters: { spaceConfigs: spaceConfigs },
+      // In case you don't want to submit any update to app
+      // locations, you can just pass the currentState as is
+      targetState: currentState,
+    };
   }
 
-  addSpaceConfiguration = async (event:React.MouseEvent<HTMLElement>) => {
-    this.props.sdk.dialogs.openCurrentApp({
+  const onSpaceConfigEdit = (id:string) => {
+    let spaceConfigIndex = spaceConfigs.findIndex((config:SpaceConfiguration) => config.id === id)
+
+    if (spaceConfigIndex !== -1) {
+      props.sdk.dialogs.openCurrentApp({
+        position: 'center',
+        title: `Edit ${spaceConfigs[spaceConfigIndex].name} Space Configuration`,
+        parameters: {
+          dialog: 'SpaceConfiguration',
+          props: {
+            spaceConfig: spaceConfigs[spaceConfigIndex]
+          }
+        }
+      })
+      .then((updatedConfig:SpaceConfiguration) => {
+        if (updatedConfig) {
+          let updatedConfigs = [...spaceConfigs]
+
+          updatedConfigs[spaceConfigIndex] = updatedConfig
+          setSpaceConfigs(updatedConfigs)
+        }
+      })
+    }
+  }
+
+  const onSpaceConfigDelete = (id:string) => {
+    let spaceConfigIndex = spaceConfigs.findIndex((config:SpaceConfiguration) => config.id === id)
+    if (spaceConfigIndex !== -1) {
+      props.sdk.dialogs.openConfirm({
+        title: "Delete",
+        message: "Are you sure?",
+        intent: "positive",
+        confirmLabel: "Delete",
+        cancelLabel: "Cancel"
+      })
+      .then((res:boolean) => {
+        if (res) {
+          let updatedConfigs = [...spaceConfigs]
+
+          updatedConfigs.splice(spaceConfigIndex, 1)
+          setSpaceConfigs(updatedConfigs)
+        }
+      })
+    }
+  }
+
+  const addSpaceConfiguration = () => {
+    props.sdk.dialogs.openCurrentApp({
       position: 'center',
       title: 'Add Space Configuration',
       parameters: {
@@ -52,156 +99,106 @@ export default class Config extends Component<ConfigProps, ConfigState> {
         props: {}
       }
     })
-    .then(config => {
-      if (config && config.id) {
-        let spaceConfigs = [...this.state.parameters.spaceConfigs, config]
-        this.setState({parameters: {spaceConfigs: spaceConfigs}})
-      }
-    })
-
-  }
-
-  onEdit = async (e:React.MouseEvent<HTMLElement>) => {
-    this.toggleDropwdown(e)
-
-    let spaceConfigIndex = (e.currentTarget.dataset.spaceConfigIndex as unknown) as number
-    let spaceConfig = this.state.parameters.spaceConfigs[spaceConfigIndex]
-
-    this.props.sdk.dialogs.openCurrentApp({
-      position: 'center',
-      title: `Edit ${spaceConfig.name} Space Configuration`,
-      parameters: {
-        dialog: 'SpaceConfiguration',
-        props: spaceConfig
-      }
-    })
-    .then(config => {
+    .then((config:SpaceConfiguration) => {
       if (config) {
-        let spaceConfigs = this.state.parameters.spaceConfigs
-        spaceConfigs[spaceConfigIndex] = config
-
-        this.setState({parameters: {spaceConfigs: spaceConfigs}})
+        setSpaceConfigs([...spaceConfigs, config])
       }
     })
   }
 
-  onDelete = async(e:React.MouseEvent<HTMLElement>) => {
-    this.toggleDropwdown(e)
-    let spaceConfigIndex = (e.currentTarget.dataset.spaceConfigIndex as unknown) as number
+  useEffect(() => {
 
-    this.props.sdk.dialogs.openConfirm({
-      title: "Delete",
-      message: "Are you sure?",
-      intent: "positive",
-      confirmLabel: "Delete",
-      cancelLabel: "Cancel"
-    })
-    .then(result => {
-      if (result) {
-        let spaceConfigs = this.state.parameters.spaceConfigs.splice(spaceConfigIndex, 1)
-        this.setState({parameters: {spaceConfigs: spaceConfigs}})
-      }
-    })
-  }
-
-  toggleDropwdown = async (e:React.MouseEvent<HTMLElement>) => {
-
-    let spaceConfigIndex = (e.currentTarget.dataset.spaceConfigIndex as unknown) as number
-    let updated = {[spaceConfigIndex]: !this.state.dropdownState[spaceConfigIndex]}
-
-    this.setState({dropdownState: {...this.state.dropdownState, ...updated}})
-  }
-
-  async componentDidMount() {
-    let parameters:any = {parameters: this.state.parameters}
-
-    const savedParams: AppInstallationParameters | null = await this.props.sdk.app.getParameters();
-
-    if (savedParams && Object.keys(savedParams).length) {
-      parameters = {parameters: savedParams}
+    //Populate SpaceConfigs with any saved values.
+    const getSavedConfigs = async () => {
+       let { spaceConfigs } = await props.sdk.app.getParameters() as {spaceConfigs?:SpaceConfiguration[]}
+       if (spaceConfigs) {
+        setSpaceConfigs(spaceConfigs)
+       }
     }
 
-    this.setState(parameters, () => {
-      // Once preparation has finished, call `setReady` to hide
-      // the loading screen and present the app to a user.
-      this.props.sdk.app.setReady();
-    });
-  }
+    getSavedConfigs().then(() => props.sdk.app.setReady())
+  }, [props.sdk.app])
 
-  onConfigure = async () => {
-    // Check that we have valid installation parameters.
-    if (!this.state.parameters.spaceConfigs.length) {
-      this.props.sdk.notifier.error('You must add at least one Cross-Space configuration to install this application.')
-      return false;
-    }
+  const tableHeaderCells = ['Space Name', 'Space ID', 'CDA Token', 'Operations']
 
-    // Get current the state of EditorInterface and other entities
-    // related to this app installation
-    const currentState:any = await this.props.sdk.app.getCurrentState();
-
-    return {
-      // Parameters to be persisted as the app configuration.
-      parameters: this.state.parameters,
-      // In case you don't want to submit any update to app
-      // locations, you can just pass the currentState as is
-      targetState: currentState,
-    };
-  };
-
-  render() {
-    return (
-      <Workbench.Content>
-        <Form>
-          <Note title="About Cross Space References">
-            The Cross-space references app allows you to search and select entries from your other spaces,
-            then references the entries within a single space. This enables you to access content from across all of your organizations.
-            The cross-space references app aims to help you create consistent content efficiently.
-          </Note>
-          <Heading>Space Configuration</Heading>
-          <Paragraph>Configure which spaces you would like to allow cross-space references to:</Paragraph>
-          <Button onClick={this.addSpaceConfiguration}>Add Space Configuration</Button>
-          {this.state.parameters.spaceConfigs.length &&
+  return (
+    <Workbench.Content>
+      <Form>
+        <Note title="About Cross Space References">
+          The Cross-space references app allows you to search and select entries from your other spaces,
+          then references the entries within a single space. This enables you to access content from across all of your organizations.
+          The cross-space references app aims to help you create consistent content efficiently.
+        </Note>
+        <Heading>Space Configuration</Heading>
+        <Paragraph>Configure which spaces you would like to allow cross-space references to:</Paragraph>
+        <Button onClick={addSpaceConfiguration}>Add Space Configuration</Button>
+        {spaceConfigs.length &&
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Space Name</TableCell>
-                  <TableCell>Id</TableCell>
-                  <TableCell>CDA Token</TableCell>
-                  <TableCell>Operations</TableCell>
+                  {tableHeaderCells.map((header:string) => (
+                    <TableCell key={header}>{header}</TableCell>
+                  ))}
                 </TableRow>
               </TableHead>
               <TableBody>
-              {this.state.parameters.spaceConfigs.map((config,index) => (
-                <TableRow key={index}>
-                  <TableCell>{config.name}</TableCell>
-                  <TableCell>{config.id}</TableCell>
-                  <TableCell>{config.token}</TableCell>
-                  <TableCell>
-                    <Dropdown
-                      isOpen={this.state.dropdownState![index]}
-                      toggleElement={
-                        <IconButton
-                          buttonType="primary"
-                          label="Operations"
-                          iconProps={{icon:"MoreVertical"}}
-                          onClick={this.toggleDropwdown}
-                          data-space-config-index={index}
-                        />
-                      }
-                    >
-                      <DropdownList maxHeight={300}>
-                        <DropdownListItem key="edit" onClick={this.onEdit} data-space-config-index={index}>Edit</DropdownListItem>
-                        <DropdownListItem key="delete" onClick={this.onDelete} data-space-config-index={index}>Delete</DropdownListItem>
-                      </DropdownList>
-                    </Dropdown>
-                  </TableCell>
-                </TableRow>
-              ))}
+                {spaceConfigs.map((config:SpaceConfiguration) => (
+                  <SpaceConfigRow key={config.id} spaceConfig={config} onEdit={onSpaceConfigEdit} onDelete={onSpaceConfigDelete} />
+                ))}
               </TableBody>
             </Table>
           }
-        </Form>
-      </Workbench.Content>
-    );
-  }
+      </Form>
+    </Workbench.Content>
+  )
+};
+
+const SpaceConfigRow = (props:SpaceConfigRowProps) => {
+  let spaceConfig = props.spaceConfig
+  return (
+    <TableRow>
+      <TableCell>{spaceConfig.name}</TableCell>
+      <TableCell>{spaceConfig.id}</TableCell>
+      <TableCell>{spaceConfig.token}</TableCell>
+      <TableCell>
+        <SpaceConfigRowDropdown {...props} />
+      </TableCell>
+    </TableRow>
+  )
 }
+
+const SpaceConfigRowDropdown = (props:SpaceConfigRowProps) => {
+  const [dropdownState, setDropdownState] = useState<boolean>(false)
+
+  const onEdit = () => {
+    setDropdownState(!dropdownState)
+    props.onEdit(id)
+  }
+
+  const onDelete = () => {
+    setDropdownState(!dropdownState)
+    props.onDelete(id)
+  }
+
+  let id = props.spaceConfig.id
+  return (
+    <Dropdown
+      isOpen={dropdownState}
+      toggleElement={
+        <IconButton
+          buttonType="primary"
+          label="Operations"
+          iconProps={{icon:"MoreVertical"}}
+          onClick={() => setDropdownState(!dropdownState)}
+        />
+      }
+    >
+      <DropdownList maxHeight={300}>
+        <DropdownListItem key="edit" onClick={onEdit} >Edit</DropdownListItem>
+        <DropdownListItem key="delete" onClick={onDelete} >Delete</DropdownListItem>
+      </DropdownList>
+    </Dropdown>
+  )
+}
+
+export default ConfigScreen

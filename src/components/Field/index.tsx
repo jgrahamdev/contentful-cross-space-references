@@ -2,19 +2,21 @@ import React, { useState, useEffect } from 'react';
 
 import { FieldExtensionSDK } from '@contentful/app-sdk';
 
-import { AppInstallationParameters, spaceConfiguration } from '../ConfigScreen'
+import { SpaceConfiguration } from 'Types'
 
-import CrossSpaceField from './CrossSpaceField';
+import { CrossSpaceReferenceEditor } from './CrossSpaceField/CrossSpaceReferenceEditor'
+import AdvisoryNote from './CrossSpaceField/AdvisoryNote'
 
 interface FieldProps {
   sdk: FieldExtensionSDK;
 }
 
 const Field = (props: FieldProps) => {
+  console.log(props.sdk.entry)
+  const { spaceConfigs } = props.sdk.parameters.installation as {spaceConfigs:SpaceConfiguration[]}
   const [value, setValue] = useState<any>(props.sdk.field.getValue())
-  const [spaceConfigs, setSpaceConfigs] = useState<spaceConfiguration[]>([])
 
-  // Update field value if needed.
+  // Fetch and update field value as needed.
   useEffect(() => {
     const detachValueChangeHandler = props.sdk.field.onValueChanged( async (value:any) => {
       setValue(value)
@@ -25,20 +27,31 @@ const Field = (props: FieldProps) => {
     }
   }, [props.sdk.field])
 
-    // Grab app parameters.
+
+  // Start AutoResizer at initialization of component.
   useEffect(() => {
-    let installParams = props.sdk.parameters.installation as AppInstallationParameters
+    props.sdk.window.startAutoResizer();
+    return () => {
+      return props.sdk.window.stopAutoResizer()
+    }
+  }, [props.sdk.window])
 
-    setSpaceConfigs(installParams.spaceConfigs)
-  }, [props.sdk.parameters.installation])
+  const CrossSpaceField = () => {
 
-  return (
-    <>
-      { spaceConfigs.length > 0 &&
-        <CrossSpaceField sdk={props.sdk} value={value} spaceConfigs={spaceConfigs} />
-      }
-    </>
-  )
+    if (spaceConfigs.length) {
+      return (
+        <>
+          <AdvisoryNote />
+          <CrossSpaceReferenceEditor sdk={props.sdk} value={value} spaceConfigs={spaceConfigs} />
+        </>
+      )
+    }
+
+    return null
+  }
+
+
+  return <CrossSpaceField />
 };
 
 export default Field;

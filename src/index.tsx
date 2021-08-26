@@ -16,7 +16,7 @@ import '@contentful/forma-36-react-components/dist/styles.css';
 import '@contentful/forma-36-fcss/dist/styles.css';
 import './index.css';
 
-import Config from './components/ConfigScreen';
+import ConfigScreen from './components/ConfigScreen';
 import EntryEditor from './components/EntryEditor';
 import Page from './components/Page';
 import Sidebar from './components/Sidebar';
@@ -32,7 +32,7 @@ init((sdk: BaseExtensionSDK) => {
   const ComponentLocationSettings = [
     {
       location: locations.LOCATION_APP_CONFIG,
-      component: <Config sdk={(sdk as unknown) as AppExtensionSDK} />
+      component: <ConfigScreen sdk={(sdk as unknown) as AppExtensionSDK} />
     },
     {
       location: locations.LOCATION_ENTRY_FIELD,
