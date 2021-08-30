@@ -4,7 +4,7 @@ import { DialogExtensionSDK } from '@contentful/app-sdk'
 import { TextField, Form, Modal, Button } from '@contentful/forma-36-react-components';
 import { createClient } from 'contentful'
 
-import { SpaceConfiguration } from 'Types'
+import { SpaceConfiguration } from '../../Types'
 
 interface ValidInput {
   [id: string]: boolean;

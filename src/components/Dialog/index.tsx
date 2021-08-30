@@ -1,7 +1,7 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { DialogExtensionSDK } from '@contentful/app-sdk'
 
-import { SpaceConfiguration } from 'Types'
+import { SpaceConfiguration } from '../../Types'
 
 import SpaceConfigurationDialog from './SpaceConfigurationDialog'
 import EntryPickerDialog from './EntryPickerDialog'
@@ -18,6 +18,14 @@ interface DialogParameters {
 }
 
 const Dialog = (props: DialogProps) => {
+
+  useEffect(() => {
+    props.sdk.window.startAutoResizer()
+    return (
+      props.sdk.window.stopAutoResizer()
+    )
+  }, [props.sdk.window])
+
   let params = props.sdk.parameters.invocation as DialogParameters
 
   if (params) {

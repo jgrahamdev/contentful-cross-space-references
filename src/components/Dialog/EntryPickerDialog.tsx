@@ -4,7 +4,7 @@ import { DialogExtensionSDK } from '@contentful/app-sdk'
 import { createClient, ContentType, Entry, ContentfulClientApi } from 'contentful'
 import { Modal, TextInput, Button, EntryCard, Paragraph, Spinner, Icon } from '@contentful/forma-36-react-components'
 
-import { SpaceConfiguration } from 'Types'
+import { SpaceConfiguration } from '../../Types'
 
 import * as EntryPickerStyles from './EntryPickerStyles'
 
@@ -86,15 +86,8 @@ const EntryPickerDialog = (props:EntryPickerProps) => {
     return () => clearTimeout(timeOutId)
   }, [query, selectedContentType, client])
 
-  useEffect(() => {
-    props.sdk.window.startAutoResizer();
-    return (
-      props.sdk.window.stopAutoResizer()
-    );
-  }, [props.sdk.window])
-
   return (
-    <div>
+    <div className={EntryPickerStyles.modalRoot}>
       <Modal.Header title="Insert Cross Space Entry" onClose={() => props.sdk.close()} />
       <Modal.Content className={EntryPickerStyles.modal.content}>
         <EntryPickerTopBar />

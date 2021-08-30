@@ -3,19 +3,10 @@ import React, { useState } from 'react'
 import { Entry } from 'contentful'
 import { FieldExtensionSDK } from '@contentful/app-sdk';
 import { Button, Dropdown, DropdownList, DropdownListItem } from '@contentful/forma-36-react-components';
-import { SpaceConfiguration } from 'Types'
+import { SpaceConfiguration } from '../../../Types'
 
 import { css } from 'emotion';
 
-const styles = {
-  wrapper: css({
-    display: 'flex',
-    border: '1px dashed #b4c3ca',
-    borderRadius: '6px',
-    justifyContent: 'center',
-    padding: '2rem'
-  })
-}
 
 interface CrossSpaceEntryActionsProps {
   spaceConfigs: SpaceConfiguration[];
@@ -24,6 +15,25 @@ interface CrossSpaceEntryActionsProps {
 
 const CrossSpaceEntryActions = (props:CrossSpaceEntryActionsProps) => {
   const [isOpen, setIsOpen] = useState(false)
+
+  const calculateHeight = () => {
+    let height = 40 + (37 * props.spaceConfigs.length)
+    return isOpen ? height : 0
+  }
+
+  const styles = {
+    wrapper: css({
+      display: 'flex',
+      border: '1px dashed #b4c3ca',
+      borderRadius: '6px',
+      justifyContent: 'center',
+      padding: '2rem'
+    }),
+    open: css({
+      height:  calculateHeight()
+    })
+  }
+
 
   const onSpaceSelect = (spaceId:string) => {
     let spaceConfig = props.spaceConfigs.find((config) => config.id === spaceId)
@@ -60,40 +70,43 @@ const CrossSpaceEntryActions = (props:CrossSpaceEntryActionsProps) => {
 
   const onButtonClick = () => {
     setIsOpen(!isOpen)
-    props.sdk.window.updateHeight()
   }
 
   return (
-    <div className={styles.wrapper}>
-      <Dropdown
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        toggleElement={
-          <Button
-            icon="Plus"
-            buttonType="muted"
-            indicateDropdown
-            onClick={onButtonClick}
-          >
-            Add content from another space
-          </Button>
-        }
-      >
-        <DropdownList border="bottom">
-          <DropdownListItem isTitle>Select Space</DropdownListItem>
-        </DropdownList>
-        <DropdownList>
-          {props.spaceConfigs.map((config:any) => (
-            <DropdownListItem
-              key={config.id}
-              onClick={() => onSpaceSelect(config.id)}
+    <>
+      <div className={styles.wrapper}>
+        <Dropdown
+          dropdownContainerClassName='cross_space_dropdown'
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          toggleElement={
+            <Button
+              icon="Plus"
+              buttonType="muted"
+              indicateDropdown
+              onClick={onButtonClick}
             >
-              {config.name}
-            </DropdownListItem>
-          ))}
-        </DropdownList>
-      </Dropdown>
-    </div>
+              Add content from another space
+            </Button>
+          }
+        >
+          <DropdownList border="bottom">
+            <DropdownListItem isTitle>Select Space</DropdownListItem>
+          </DropdownList>
+          <DropdownList>
+            {props.spaceConfigs.map((config:any) => (
+              <DropdownListItem
+                key={config.id}
+                onClick={() => onSpaceSelect(config.id)}
+              >
+                {config.name}
+              </DropdownListItem>
+            ))}
+          </DropdownList>
+        </Dropdown>
+      </div>
+      <div className={styles.open}></div>
+    </>
   )
 }
 

@@ -5,7 +5,7 @@ import { WrappedEntryCard, MissingEntityCard } from '@contentful/field-editor-re
 import { EntryCard } from '@contentful/forma-36-react-components';
 import { FieldExtensionSDK } from '@contentful/app-sdk'
 
-import { SpaceConfiguration, CrossSpaceLink, CrossSpaceEntryData } from 'Types'
+import { SpaceConfiguration, CrossSpaceLink, CrossSpaceEntryData } from '../../../Types'
 import CrossSpaceEntryActions from './CrossSpaceEntryActions'
 
 interface CrossSpaceReferenceEditorProps {

@@ -1,6 +1,12 @@
 import tokens from '@contentful/forma-36-tokens'
 import { css } from 'emotion'
 
+export const modalRoot = css({
+  display: 'flex',
+  flexDirection: 'column',
+  height: 700,
+})
+
 const focus = {
   outline: 'none',
   borderColor: tokens.colorPrimary,

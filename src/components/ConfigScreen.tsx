@@ -7,7 +7,7 @@ import {
   Table, TableHead, TableCell, TableRow, TableBody
 } from '@contentful/forma-36-react-components';
 
-import { SpaceConfiguration } from 'Types'
+import { SpaceConfiguration } from '../Types'
 
 interface ConfigProps {
   sdk: AppExtensionSDK;
