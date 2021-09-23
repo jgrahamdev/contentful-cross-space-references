@@ -13,6 +13,10 @@ interface ConfigProps {
   sdk: AppExtensionSDK;
 }
 
+interface InstallationParams {
+  spaceConfigs?: SpaceConfiguration[]
+}
+
 interface SpaceConfigRowProps {
   spaceConfig:SpaceConfiguration;
   onEdit: (id:string) => void;
@@ -110,10 +114,10 @@ const ConfigScreen = (props: ConfigProps) => {
 
     //Populate SpaceConfigs with any saved values.
     const getSavedConfigs = async () => {
-       let { spaceConfigs } = await props.sdk.app.getParameters() as {spaceConfigs?:SpaceConfiguration[]}
-       if (spaceConfigs) {
-        setSpaceConfigs(spaceConfigs)
-       }
+      let params = await props.sdk.app.getParameters() as InstallationParams | null
+      if (params && params.spaceConfigs) {
+        setSpaceConfigs(params.spaceConfigs)
+      }
     }
 
     getSavedConfigs().then(() => props.sdk.app.setReady())
