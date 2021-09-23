@@ -67,6 +67,7 @@ const EntryPickerDialog = (props:EntryPickerProps) => {
 
   // Grab content based on search params, with a delay of 500ms
   useEffect(() => {
+    console.log(selectedContentType)
     const timeOutId = setTimeout(() => {
       if (query.length && client !== undefined) {
         setLoading(true)
@@ -184,10 +185,10 @@ const EntryPickerContentTypeSelect = (props:{
           onChange={props.onSelectChange}
           value={props.selectValue}
         >
-          <option className={styles.option}>Any</option>
+          <option className={styles.option} value="any">Any</option>
 
           {props.contentTypes.map((contentType:ContentType) => (
-            <option key={contentType.sys.id} className={styles.option}>{contentType.name}</option>
+            <option key={contentType.sys.id} value={contentType.sys.id} className={styles.option}>{contentType.name}</option>
           ))}
 
         </select>
