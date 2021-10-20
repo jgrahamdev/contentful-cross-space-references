@@ -10,13 +10,17 @@ Contentful Cross Space References is a simple app that makes it easy to create a
 
 To use this app in your spaces, follow the below steps:
 1. [Install the app to your space](https://app.contentful.com/deeplink?link=apps&id=1gIm0dTkt9n2mRaY7Shsc7)
-2. Select the Space and Environment that you want to install the app in, then select "Continue" to be redirected to the Apps page in the selected space/environment.
-3. Select "Authorize access" to allow Cross Space References app to access your space, after which you'll be redirected to the App Configuration screen. 
-4. This app will only be able to be installed after you've defined at least one external space from which you'd like to create relationships to this space's content, so select the "Add Space Configuration" button. ![Installation Screen](images/Installation.png)
+2. Select the Space and Environment that you want to install the app in, then select "Continue" to be redirected to the Apps page in the selected space/environment: \
+   ![Space installation screen](images/DeepLinkInstallation.png)
+3. Select "Authorize access" to allow Cross Space References app to access your space, after which you'll be redirected to the App Configuration screen: \
+   ![Authorization screen](images/AuthorizationScreen.png) 
+4. This app will only be able to be installed after you've defined at least one external space from which you'd like to create relationships to this space's content, so select the "Add Space Configuration" button: \
+   ![Installation Screen](images/Installation.png)
 5. In the modal window, enter a Space ID and Content Delivery API token that will be used to retrieve Content from your external space as seen here
-   (_Note: you will be unable to save this configuration if the Space ID and Token are invalid._):
+   (_Note: you will be unable to save this configuration if the Space ID and Token are invalid._): \
    ![Space Configuration Screen](images/SpaceConfiguration.png). 
-6. Select Save in the modal window, at which point you'll see the external space listed in your App Configuration: ![Installation Screen w Space Configuration](images/Installation_w_SpaceConfig.png)
+6. Select Save in the modal window, at which point you'll see the external space listed in your App Configuration: \
+   ![Installation Screen w Space Configuration](images/Installation_w_SpaceConfig.png)
 7. Select "Install".
    1. _Note: Additional external spaces can be added after installation by returning to this screen via the App tab -> Manage Apps_
    2. _From the Apps management page, selecting the dropdown menu to the right of your Cross Space Configuration app and choose the Configure option._
@@ -25,7 +29,8 @@ To use this app in your spaces, follow the below steps:
 
 
 ### Configuring your Content Types
-1. For every Content Type you'd like to be able to reference content from an external space, create a new "JSON Object" field, then set the appearance for this field to use the Cross Space Reference App: ![Field Appearance Configuration](images/FieldConfiguration.png)
+1. For every Content Type you'd like to be able to reference content from an external space, create a new "JSON Object" field, then set the appearance for this field to use the Cross Space Reference App: \
+   ![Field Appearance Configuration](images/FieldConfiguration.png)
 
 ## JSON Field Output
 When using the Cross Space References app, the reference will be stored as a JSON object with the following structure: 
@@ -87,7 +92,8 @@ Your app is ready to be deployed!
 ## Configure and Install the App to your Space
 1. From the App Definition window, select the down arrow next to "Actions", then select "Install to space".
 2. Select a Space and Environment where you'd like to install this app in the modal window that appears, then select "Continue".
-3. Authorize the Cross Space References app for your space, after which you'll be redirected to the App Configuration screen, as seen here: ![Installation Screen](images/Installation.png)
+3. Authorize the Cross Space References app for your space, after which you'll be redirected to the App Configuration screen, as seen here: \
+   ![Installation Screen](images/Installation.png)
 4. Follow installation steps above, beginning with step 4.
 
 ## Create a PR
