@@ -47,6 +47,8 @@ const EntryPickerDialog = (props:EntryPickerProps) => {
     setQuery(e.target.value)
   }
 
+  const compareContentTypesByName = (a: ContentType, b: ContentType) => a.name.localeCompare(b.name)
+
   useEffect(() => {
     let init = createClient({
       space: spaceConfig.id,
@@ -60,7 +62,7 @@ const EntryPickerDialog = (props:EntryPickerProps) => {
   useEffect(() => {
     if (client) {
       client.getContentTypes()
-      .then(res => setContentTypes(res.items))
+      .then(res => setContentTypes(res.items.sort(compareContentTypesByName)))
     }
 
   }, [client])
