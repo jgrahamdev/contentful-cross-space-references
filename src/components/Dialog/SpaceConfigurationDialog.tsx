@@ -12,8 +12,15 @@ interface ValidInput {
 }
 
 interface SpaceConfigMessages {
-  [id:string]: string;
+  [spaceId:string]: string;
   token: string;
+  environment: string;
+}
+
+interface SpaceConfigFlags {
+  [spaceId:string]: boolean;
+  token: boolean;
+  environment: boolean;
 }
 
 interface SpaceConfigurationProps {
@@ -37,19 +44,27 @@ const SpaceConfigField = (props: SpaceConfigFieldProps) => {
   let validationMessage = props.validationMessages[fieldId] ? props.validationMessages[fieldId] : 'This field is required'
 
   let labels:SpaceConfigMessages = {
-    id: 'Space ID',
+    spaceId: 'Space ID',
     token: 'CDA Token',
+    environment: 'Environment',
   }
 
   let help:SpaceConfigMessages = {
-    id: 'Enter your Space ID',
-    token: 'Enter a valid Content Delivery API Token for the selected space.'
+    spaceId: 'Enter your Space ID',
+    token: 'Enter a valid Content Delivery API Token for the selected space.',
+    environment: 'Enter a valid Environment name within the selected space.',
+  }
+
+  let required:SpaceConfigFlags = {
+    spaceId: true,
+    token: true,
+    environment: false,
   }
 
 
   return (
     <TextField
-      required
+      required={required[fieldId]}
       name={fieldId}
       id={fieldId}
       labelText={labels[fieldId]}
@@ -65,27 +80,27 @@ const SpaceConfigField = (props: SpaceConfigFieldProps) => {
 
 
 const SpaceConfigurationDialog = (props: SpaceConfigurationProps) => {
-  const [spaceConfig, setSpaceConfig] = useState<SpaceConfiguration>(props.spaceConfig ? props.spaceConfig : {name: '', id: '', token: ''})
+  const [spaceConfig, setSpaceConfig] = useState<SpaceConfiguration>(props.spaceConfig ? props.spaceConfig : {name: '', id: '', spaceId: '', token: '', environment: ''})
 
-  const [validInput, setValidInput] = useState<ValidInput>({id: true, token: true})
-  const [validationMessages, setValidationMessages] = useState<SpaceConfigMessages>({id: '', token: ''})
+  const [validInput, setValidInput] = useState<ValidInput>({spaceId: true, token: true, environment: true})
+  const [validationMessages, setValidationMessages] = useState<SpaceConfigMessages>({spaceId: '', token: '', environment: ''})
 
-  const onFieldFocus = (id:string) => {
-    setValidInput({...validInput, [id]: true})
+  const onFieldFocus = (spaceId:string) => {
+    setValidInput({...validInput, [spaceId]: true})
   }
 
-  const onFieldBlur = (id:string, value:string) => {
+  const onFieldBlur = (spaceId:string, value:string) => {
     if (!value.length) {
-      setValidInput({...validInput, [id]: false})
+      setValidInput({...validInput, [spaceId]: false})
 
-      if (validationMessages[id]) {
-        setValidationMessages({...validationMessages, [id]: ''})
+      if (validationMessages[spaceId]) {
+        setValidationMessages({...validationMessages, [spaceId]: ''})
       }
     }
   }
 
-  const onFieldChange = (id:string, value:string) => {
-    setSpaceConfig({...spaceConfig, [id]: value})
+  const onFieldChange = (spaceId:string, value:string) => {
+    setSpaceConfig({...spaceConfig, [spaceId]: value})
   }
 
   const onClose = () => {
@@ -93,15 +108,16 @@ const SpaceConfigurationDialog = (props: SpaceConfigurationProps) => {
   }
 
   const onSave = () => {
-    if (validInput.id && validInput.token) {
+    if (validInput.spaceId && validInput.token) {
       let client = createClient({
-        space: spaceConfig.id,
+        space: spaceConfig.spaceId,
         accessToken: spaceConfig.token,
+        environment: spaceConfig.environment || 'master',
       })
 
       client.getSpace()
       .then((space) => {
-        props.sdk.close({...spaceConfig, ...{name: space.name}})
+        props.sdk.close({...spaceConfig, ...{name: space.name, id: `${spaceConfig.spaceId}-${spaceConfig.environment || 'master'}`}})
       })
       .catch(e => {
         props.sdk.notifier.error(e.message)
@@ -115,13 +131,13 @@ const SpaceConfigurationDialog = (props: SpaceConfigurationProps) => {
   return (
       <Form>
         <Modal.Content>
-          {['id', 'token'].map((key:string) => (
+          {['spaceId', 'token', 'environment'].map((key:string) => (
             <SpaceConfigField
               onChange={(e:React.ChangeEvent<HTMLInputElement>) => onFieldChange(key, e.currentTarget.value)}
               onFocus={() => onFieldFocus(key)}
               onBlur={(e:React.FocusEvent<HTMLInputElement>) => onFieldBlur(key, e.currentTarget.value)}
               key={key}
-              id={key}
+              id={key} 
               spaceConfig={spaceConfig}
               validations={validInput}
               validationMessages={validationMessages}
@@ -129,7 +145,7 @@ const SpaceConfigurationDialog = (props: SpaceConfigurationProps) => {
           ))}
         </Modal.Content>
         <Modal.Controls>
-          <Button buttonType="positive" onClick={onSave} disabled={(!spaceConfig.id.length || !spaceConfig.token.length) || (!validInput.id || !validInput.token)}>Save</Button>
+          <Button buttonType="positive" onClick={onSave} disabled={(!spaceConfig.spaceId.length || !spaceConfig.token.length) || (!validInput.spaceId || !validInput.token)}>Save</Button>
           <Button buttonType="muted" onClick={onClose}>Close</Button>
         </Modal.Controls>
       </Form>

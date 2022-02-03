@@ -123,7 +123,7 @@ const ConfigScreen = (props: ConfigProps) => {
     getSavedConfigs().then(() => props.sdk.app.setReady())
   }, [props.sdk.app])
 
-  const tableHeaderCells = ['Space Name', 'Space ID', 'CDA Token', 'Operations']
+  const tableHeaderCells = ['Id', 'Space Name', 'Space ID', 'CDA Token', 'Environment', 'Operations']
 
   return (
     <Workbench.Content>
@@ -161,9 +161,11 @@ const SpaceConfigRow = (props:SpaceConfigRowProps) => {
   let spaceConfig = props.spaceConfig
   return (
     <TableRow>
-      <TableCell>{spaceConfig.name}</TableCell>
       <TableCell>{spaceConfig.id}</TableCell>
+      <TableCell>{spaceConfig.name}</TableCell>
+      <TableCell>{spaceConfig.spaceId}</TableCell>
       <TableCell>{spaceConfig.token}</TableCell>
+      <TableCell>{spaceConfig.environment}</TableCell>
       <TableCell>
         <SpaceConfigRowDropdown {...props} />
       </TableCell>

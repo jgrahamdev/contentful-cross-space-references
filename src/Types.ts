@@ -1,10 +1,12 @@
-import { SpaceLink, Entry, ContentType, Locale } from 'contentful'
+import { SpaceLink, Entry, ContentType, Locale, EnvironmentLink } from 'contentful'
 import { FieldExtensionSDK } from '@contentful/app-sdk'
 
 export interface SpaceConfiguration {
   [name:string]: string;
   id: string;
+  spaceId: string;
   token: string;
+  environment: string;
 }
 
 export interface CrossSpaceLink {
@@ -13,6 +15,9 @@ export interface CrossSpaceLink {
   id: string,
   space: {
     sys: SpaceLink
+  },
+  environment: {
+    sys: EnvironmentLink
   }
 }
 
