@@ -51,8 +51,9 @@ const EntryPickerDialog = (props:EntryPickerProps) => {
 
   useEffect(() => {
     let init = createClient({
-      space: spaceConfig.id,
+      space: spaceConfig.spaceId,
       accessToken: spaceConfig.token,
+      environment: spaceConfig.environment || 'master',
     })
 
     setClient(init)

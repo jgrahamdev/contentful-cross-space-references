@@ -58,6 +58,7 @@ const CrossSpaceEntryActions = (props:CrossSpaceEntryActionsProps) => {
               linkType: "CrossSpaceEntry",
               id: response.sys.id,
               space: response.sys.space,
+              environment: response.sys.environment,
             }
           })
           .catch((err) => {
@@ -99,7 +100,7 @@ const CrossSpaceEntryActions = (props:CrossSpaceEntryActionsProps) => {
                 key={config.id}
                 onClick={() => onSpaceSelect(config.id)}
               >
-                {config.name}
+                {config.name} {config.environment && ` (${config.environment})`}
               </DropdownListItem>
             ))}
           </DropdownList>

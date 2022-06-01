@@ -23,12 +23,14 @@ export const CrossSpaceReferenceEditor = (props:CrossSpaceReferenceEditorProps) 
   const getCrossSpaceEntryData = React.useCallback(async (link:CrossSpaceLink, spaceConfigs:SpaceConfiguration[]) => {
     let entryData:any = {}
 
-    let spaceConfig = spaceConfigs.find((config:SpaceConfiguration) => link.space.sys.id === config.id)
+    let spaceConfigId = `${link.space.sys.id}-${link.environment?.sys?.id || 'master'}`;
+    let spaceConfig = spaceConfigs.find((config:SpaceConfiguration) => spaceConfigId === config.id)
 
     if (spaceConfig) {
       let client = createClient({
-        space: spaceConfig.id,
+        space: spaceConfig.spaceId,
         accessToken: spaceConfig.token,
+        environment: spaceConfig.environment || 'master',
       })
 
       let locales:LocaleCollection = await client.getLocales()
@@ -93,7 +95,7 @@ export const CrossSpaceReferenceEditor = (props:CrossSpaceReferenceEditorProps) 
     }
 
     if (props.crossSpaceEntryData) {
-      return <WrappedEntryCard
+      return <WrappedEntryCard 
         {...props.entryCardProps}
         entry={props.crossSpaceEntryData.entry}
         contentType={props.crossSpaceEntryData.contentType}
